@@ -16,6 +16,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapUserEndpoints();
+app.MapUserEndpoints(); // Method to list all endpoints of API
 app.UseHttpsRedirection();
 app.Run();
