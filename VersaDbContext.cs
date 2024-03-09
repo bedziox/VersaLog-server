@@ -1,5 +1,5 @@
-using Amazon.Internal;
 using Microsoft.EntityFrameworkCore;
+using System;
 using VersaLog_server.Models;
 
 namespace VersaLog_server;
@@ -13,5 +13,4 @@ public class VersaDbContext : DbContext
     public VersaDbContext(DbContextOptions<VersaDbContext> options) : base(options)
     {
     }
-    
-}do
+}

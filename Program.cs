@@ -1,11 +1,12 @@
 using VersaLog_server.Startup;
+using VersaLog_server.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 
-builder.Services.RegisterServices();
+builder.Services.RegisterServices(builder.Configuration.GetConnectionString("AWSConnection"));
 
 var app = builder.Build();
 
