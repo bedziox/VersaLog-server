@@ -26,10 +26,19 @@ public class AuthController : ControllerBase
     {
         if (_context.Users.Any(db => db.Username == request.Username || db.Email == request.Email))
             return BadRequest("User already exists");
-        User user = UserBuilder.BuildUser(request);
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-        _context.Users.Add(user);
-        _context.SaveChanges();
+        User user = new User();
+        try
+        {
+            user = UserBuilder.BuildUser(request);
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            _context.Users.Add(user);
+            _context.SaveChanges();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+
         return Ok(user);
     }
     [HttpPost("login")]
