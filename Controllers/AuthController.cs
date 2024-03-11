@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -14,11 +15,13 @@ public class AuthController : ControllerBase
 {
     private readonly VersaDbContext _context;
     private readonly IConfiguration _configuration;
+    private readonly string _keyToken = string.Empty;
 
     public AuthController(IConfiguration configuration, VersaDbContext context)
     {
         _configuration = configuration;
         _context = context;
+        _keyToken = _configuration.GetSection("AppSettings:token").Value!;
     }
 
     [HttpPost("register")]
@@ -51,19 +54,45 @@ public class AuthController : ControllerBase
         return Ok(token);
     }
 
+    [HttpPost("valid/{token}")]
+    public ActionResult<string> ValidateToken(string? token)
+    {
+        string? jwt;
+        var validationParameters = new TokenValidationParameters
+        {
+            ValidateLifetime = true
+        };
+        if (token == null)
+            return BadRequest("Token cannot be empty");
+        try
+        {
+            JwtSecurityToken newToken = new JwtSecurityToken(token);
+            if (newToken.ValidTo > DateTime.UtcNow)
+                return Ok(token);
+            else
+                return Unauthorized("Token not valid");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest("Exception occurred during token processing");
+        }
+
+        return Ok(jwt);
+    }
+    
     private string CreateToken(User user)
     {
         List<Claim> claims = new List<Claim>()
         {
-            new Claim(ClaimTypes.Name, user.Username)
+            new Claim(ClaimTypes.Name, user.Username),
         };
         
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            _configuration.GetSection("AppSettings:token").Value!));
+            _keyToken));
         var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
         var token = new JwtSecurityToken(
             claims: claims,
-            expires: DateTime.Now.AddDays(1),
+            expires: DateTime.UtcNow.AddMinutes(1),
             signingCredentials: cred);
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
         return jwt;
