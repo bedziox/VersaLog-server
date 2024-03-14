@@ -47,21 +47,26 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public ActionResult<User> Login(UserDto request)
     {
-        var user = _context.Users.SingleOrDefault(u => u.Username == request.Username || u.Email == request.Email);
-        if (user != null && !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-            return BadRequest("User not found or wrong password");
-        string token = CreateToken(user);
-        return Ok(token);
+        try
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Username == request.Username || u.Email == request.Email);
+            if(!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            {
+                throw new Exception();
+            }
+            string token = CreateToken(user);
+            return Ok(token);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest("Wrong user or password");
+        }
     }
 
-    [HttpPost("valid/{token}")]
+    [HttpPost("valid")]
     public ActionResult<string> ValidateToken(string? token)
     {
         string? jwt;
-        var validationParameters = new TokenValidationParameters
-        {
-            ValidateLifetime = true
-        };
         if (token == null)
             return BadRequest("Token cannot be empty");
         try
@@ -69,15 +74,12 @@ public class AuthController : ControllerBase
             JwtSecurityToken newToken = new JwtSecurityToken(token);
             if (newToken.ValidTo > DateTime.UtcNow)
                 return Ok(token);
-            else
-                return Unauthorized("Token not valid");
+            return Unauthorized("Token not valid");
         }
         catch (Exception ex)
         {
             return BadRequest("Exception occurred during token processing");
         }
-
-        return Ok(jwt);
     }
     
     private string CreateToken(User user)

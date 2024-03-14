@@ -8,6 +8,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.RegisterServices(builder.Configuration.GetConnectionString("AWSConnection"));
 
+builder.Services.AddCors(o => o.AddPolicy("MyPolicy", builder2 =>
+{
+    builder2.WithOrigins("*")
+        .AllowAnyMethod()
+        .AllowAnyHeader();
+}));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -17,6 +24,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("MyPolicy");
 app.MapUserEndpoints(); // Method to list all endpoints of API
 app.UseHttpsRedirection();
 app.Run();
