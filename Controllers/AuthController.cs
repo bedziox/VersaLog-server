@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using VersaLog_server.Models;
 namespace VersaLog_server.Controllers;
@@ -25,7 +26,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public ActionResult<User> Register(UserDto request)
+    public async Task<ActionResult<User>> Register(UserDto request)
     {
         if (_context.Users.Any(db => db.Username == request.Username || db.Email == request.Email))
             return BadRequest("User already exists");
@@ -35,21 +36,20 @@ public class AuthController : ControllerBase
             user = UserBuilder.BuildUser(request);
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
             _context.Users.Add(user);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+            return Ok(user);
         }
         catch (Exception e)
         {
             return BadRequest(e.Message);
         }
-
-        return Ok(user);
     }
     [HttpPost("login")]
-    public ActionResult<User> Login(UserDto request)
+    public async Task<ActionResult<User>> Login(UserDto request)
     {
         try
         {
-            var user = _context.Users.FirstOrDefault(u => u.Username == request.Username || u.Email == request.Email);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Username || u.Email == request.Email);
             if(!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
                 throw new Exception();

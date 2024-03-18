@@ -10,4 +10,5 @@ public class Training()
     public DateTime DateAssigned { get; set; }
     public Status Status { get; set; }
     public ICollection<Exercise> Exercises { get; set; } = new List<Exercise>();
+    public ICollection<string> Results { get; set; } = new List<string>();
 }

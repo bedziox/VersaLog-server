@@ -12,5 +12,4 @@ public class Exercise
     public string Description { get; set; } = string.Empty;
     [Required]
     public ExerciseType Type { get; set; }
-    public string Result { get; set; } = string.Empty;
 }
