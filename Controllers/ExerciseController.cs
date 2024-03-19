@@ -11,17 +11,14 @@ namespace VersaLog_server.Controllers;
 [ApiController]
 public class ExerciseController : Controller
 {
-    private readonly IConfiguration _configuration;
     private readonly VersaDbContext _context;
 
-    public ExerciseController(IConfiguration configuration, VersaDbContext context)
+    public ExerciseController(VersaDbContext context)
     {
-        _configuration = configuration;
         _context = context;
     }
 
     [HttpGet]
-    [Route("all")]
     public async Task<ActionResult<ICollection<Exercise>>> GetAll()
     {
         try
@@ -103,17 +100,25 @@ public class ExerciseController : Controller
     }
 
     [HttpDelete]
-    public async Task<ActionResult> DeleteExercise(int id)
+    public async Task<ActionResult> DeleteExercise(int exerciseId)
     {
         try
         {
-            _context.Exercises.Remove(_context.Exercises.First(db => db.ExerciseId == id));
-            await _context.SaveChangesAsync();
-            return (Ok($"Exercise with id:{id} removed"));
+            var exercise = _context.Exercises.Find(exerciseId);
+            if (exercise != null)
+            {
+                _context.Exercises.Remove(exercise);
+                await _context.SaveChangesAsync();
+                return (Ok($"Exercise with id:{exerciseId} removed"));
+            }
+
+            return NotFound($"Exercise with id:{exerciseId} not found");
+
         }
         catch (Exception ex)
         {
             return BadRequest("Something went wrong with request, try again");
         }
     }
+    
 }

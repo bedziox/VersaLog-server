@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace VersaLog_server.Utils;
 
 public enum ExerciseType
@@ -10,3 +12,5 @@ public enum ExerciseType
     Jogging,
     TeamGame
 }
+
+
