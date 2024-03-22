@@ -55,7 +55,13 @@ public class AuthController : ControllerBase
                 throw new Exception();
             }
             string token = CreateToken(user);
-            return Ok(token);
+            UserDto response = new UserDto
+            {
+                Username = user.Username,
+                Id = user.UserId,
+                Token = token
+            };
+            return Ok(response);
         }
         catch (Exception ex)
         {
@@ -94,7 +100,7 @@ public class AuthController : ControllerBase
         var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
         var token = new JwtSecurityToken(
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(1),
+            expires: DateTime.UtcNow.AddDays(1),
             signingCredentials: cred);
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
         return jwt;

@@ -28,12 +28,13 @@ public class UserBuilder
             throw new Exception("Incorrect email");
         if (!UserValidation.ValidatePassword(request.Password))
             throw new Exception("Password too weak, password should contain at least 8 characters, capital letter and special sign");
-        
-        User user = new User();
-        user.Username = request.Username;
-        user.FirstName = request.FirstName;
-        user.LastName = request.LastName;
-        user.Email = request.Email;
+        User user = new User
+        {
+            Username = request.Username,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            Email = request.Email
+        };
         return user;
     }
 }

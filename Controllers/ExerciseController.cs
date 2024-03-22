@@ -58,13 +58,14 @@ public class ExerciseController : Controller
     {
         if (_context.Exercises.Any(db => db.Name == request.Name))
             return BadRequest("Exercise already exists");
-        var exercise = new Exercise();
         try
         {
-
-            exercise.Name = request.Name;
-            exercise.Description = request.Description;
-            exercise.Type = request.Type;
+            var exercise = new Exercise
+            {
+                Description = request.Description,
+                Name = request.Name,
+                Type = request.Type
+            };
             _context.Exercises.Add(exercise);
             await _context.SaveChangesAsync();
             return Ok(exercise);
@@ -120,5 +121,18 @@ public class ExerciseController : Controller
             return BadRequest("Something went wrong with request, try again");
         }
     }
-    
+    [HttpGet]
+    [Route("filter/{type}")]
+    public async Task<ActionResult<ICollection<Exercise>>> GetByType(string type)
+    {
+        try
+        {
+            var exercises = await _context.Exercises.Where(e => e.Type.ToString() == type).ToListAsync();
+            return Ok(exercises);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest("Error occurred during sending exercises by type");
+        }
+    }
 }

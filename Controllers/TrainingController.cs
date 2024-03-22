@@ -108,6 +108,66 @@ public class TrainingController : Controller
             return BadRequest("Something went wrong");
         }
     }
+    [HttpPost]
+    public async Task<ActionResult<Training>> AddTraining([FromBody] TrainingDto request)
+    {
+        try
+        {
+            var training = new Training
+            {
+                DateAssigned = request.DateAssigned,
+                Status = request.Status,
+                Exercises = request.Exercises,
+                Results = request.Results
+            };
+            var user = await _context.Users.FindAsync(request.UserId);
+            if (user != null)
+            {
+                _context.Trainings.Add(training);
+                user.Trainings.Add(training);
+                
+            }
+            
+            // Save changes to the database
+            await _context.SaveChangesAsync();
+
+            // Return the created Training object (optional)
+            return Ok(training);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+    [HttpPut]
+    [Route("{id}")]
+    public async Task<IActionResult> EditTraining(int id, [FromBody] TrainingDto trainingDto)
+    {
+        try
+        {
+            var training = await _context.Trainings
+                .Include(t => t.Exercises) // Eager loading for exercises (optional)
+                .FirstOrDefaultAsync(t => t.TrainingId == id);
+
+            if (training == null)
+            {
+                return NotFound("Training not found");
+            }
+            
+            training.DateAssigned = trainingDto.DateAssigned;
+            training.Status = trainingDto.Status;
+            training.Results = trainingDto.Results; // Update results if needed
+
+            _context.Trainings.Update(training);
+            await _context.SaveChangesAsync();
+
+            return Ok(training);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest( ex.Message);
+        }
+    }
     
 }
 
