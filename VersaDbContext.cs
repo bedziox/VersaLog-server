@@ -13,4 +13,14 @@ public class VersaDbContext : DbContext
     public VersaDbContext(DbContextOptions<VersaDbContext> options) : base(options)
     {
     }
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Training>()
+            .HasOne<User>()
+            .WithMany(t => t.Trainings)
+            .HasForeignKey(x => x.TrainingId);
+        modelBuilder.Entity<Exercise>()
+            .HasMany<Training>()
+            .WithMany(t => t.Exercises);
+    }
 }

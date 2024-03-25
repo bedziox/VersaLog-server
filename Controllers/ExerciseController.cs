@@ -1,6 +1,10 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection.Metadata;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VersaLog_server.Models;
@@ -19,7 +23,7 @@ public class ExerciseController : Controller
     }
 
     [HttpGet]
-    public async Task<ActionResult<ICollection<Exercise>>> GetAll()
+    public async Task<ActionResult<List<Exercise>>> GetAll()
     {
         try
         {
@@ -105,7 +109,7 @@ public class ExerciseController : Controller
     {
         try
         {
-            var exercise = _context.Exercises.Find(exerciseId);
+            var exercise = await _context.Exercises.FirstOrDefaultAsync(db => db.ExerciseId == exerciseId);
             if (exercise != null)
             {
                 _context.Exercises.Remove(exercise);
@@ -119,20 +123,6 @@ public class ExerciseController : Controller
         catch (Exception ex)
         {
             return BadRequest("Something went wrong with request, try again");
-        }
-    }
-    [HttpGet]
-    [Route("filter/{type}")]
-    public async Task<ActionResult<ICollection<Exercise>>> GetByType(string type)
-    {
-        try
-        {
-            var exercises = await _context.Exercises.Where(e => e.Type.ToString() == type).ToListAsync();
-            return Ok(exercises);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest("Error occurred during sending exercises by type");
         }
     }
 }

@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +21,7 @@ public class TrainingController : Controller
     }
 
     [HttpGet]
-    public async Task<ActionResult<ICollection<Training>>> GetAll()
+    public async Task<ActionResult<List<Training>>> GetAll()
     {
         try
         {
@@ -52,11 +56,11 @@ public class TrainingController : Controller
 
     [HttpGet]
     [Route("user")]
-    public ActionResult<ICollection<Training>> GetAllByUser(int userId)
+    public ActionResult<List<Training>> GetAllByUser(int userId)
     {
         try
         {
-            var user = _context.Users.Find(userId);
+            var user = _context.Users.FirstOrDefault(db=>db.UserId == userId);
             if (user != null)
             {
                 var trainings = user.Trainings;
@@ -75,7 +79,7 @@ public class TrainingController : Controller
     {
         try
         {
-            var user = _context.Users.Find(userId);
+            var user = _context.Users.FirstOrDefault(db => db.UserId == userId);
             if (user != null)
             {
                 var training = user.Trainings.Where(o=>o.TrainingId == trainingId);
@@ -94,7 +98,7 @@ public class TrainingController : Controller
     {
         try
         {
-            var training = _context.Trainings.Find(trainingId);
+            var training = _context.Trainings.FirstOrDefault(db=> db.TrainingId == trainingId);
             if (training != null)
             {
                 _context.Trainings.Remove(training);
@@ -117,21 +121,29 @@ public class TrainingController : Controller
             {
                 DateAssigned = request.DateAssigned,
                 Status = request.Status,
-                Exercises = request.Exercises,
-                Results = request.Results
+                Results = request.Results.ToList(),
             };
-            var user = await _context.Users.FindAsync(request.UserId);
+            var existingExercises = new List<Exercise>();
+            foreach (var item in request.Exercises)
+            {
+                var exercise = await _context.Exercises.FirstOrDefaultAsync(db => db.ExerciseId == item.ExerciseId);
+                if (exercise != null)
+                {
+                    existingExercises.Add(exercise);
+                }
+                else
+                {
+                    return NotFound($"Exercise with id: {item.ExerciseId} not found");
+                }
+            }
+            training.Exercises = existingExercises;
+            var user = await _context.Users.FirstOrDefaultAsync(db => db.UserId == request.UserId);
             if (user != null)
             {
-                _context.Trainings.Add(training);
-                user.Trainings.Add(training);
-                
+                training.User = user;
             }
-            
-            // Save changes to the database
+            _context.Trainings.Add(training);
             await _context.SaveChangesAsync();
-
-            // Return the created Training object (optional)
             return Ok(training);
         }
         catch (Exception ex)
@@ -143,30 +155,29 @@ public class TrainingController : Controller
     [Route("{id}")]
     public async Task<IActionResult> EditTraining(int id, [FromBody] TrainingDto trainingDto)
     {
-        try
-        {
-            var training = await _context.Trainings
-                .Include(t => t.Exercises) // Eager loading for exercises (optional)
-                .FirstOrDefaultAsync(t => t.TrainingId == id);
-
-            if (training == null)
-            {
-                return NotFound("Training not found");
-            }
-            
-            training.DateAssigned = trainingDto.DateAssigned;
-            training.Status = trainingDto.Status;
-            training.Results = trainingDto.Results; // Update results if needed
-
-            _context.Trainings.Update(training);
-            await _context.SaveChangesAsync();
-
-            return Ok(training);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest( ex.Message);
-        }
+         try
+         {
+             var training = await _context.Trainings
+                 .Include(t => t.Exercises) // Eager loading for exercises (optional)
+                 .FirstOrDefaultAsync(t => t.TrainingId == id);
+             if (training == null)
+             {
+                 return NotFound("Training not found");
+             }
+             
+             training.DateAssigned = trainingDto.DateAssigned;
+             training.Status = trainingDto.Status;
+             training.Results = trainingDto.Results.ToList();
+        
+             _context.Trainings.Update(training);
+             await _context.SaveChangesAsync();
+        
+             return Ok(training);
+         }
+         catch (Exception ex)
+         {
+             return BadRequest( ex.Message);
+         }
     }
     
 }

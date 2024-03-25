@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VersaLog_server.Models;
@@ -56,7 +58,7 @@ public class UserController : Controller
     {
         try
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = _context.Users.FirstOrDefault(db => db.UserId == id);
             if (user == null)
             {
                 return NotFound($"User with id: {id} not found");
