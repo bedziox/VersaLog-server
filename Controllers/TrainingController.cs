@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
 using VersaLog_server.Models;
 
@@ -26,7 +25,7 @@ public class TrainingController : Controller
     {
         try
         {
-            return await _context.Trainings.ToListAsync();
+            return await _context.Trainings.Include(db => db.Exercises).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -41,7 +40,7 @@ public class TrainingController : Controller
 
         try
         {
-            var training = _context.Trainings.FirstOrDefault(o => o.TrainingId == id);
+            var training = _context.Trainings.Include(db => db.Exercises).FirstOrDefault(o => o.TrainingId == id);
             if (training != null)
             {
                 return Ok(training);
@@ -61,10 +60,9 @@ public class TrainingController : Controller
     {
         try
         {
-            var user = _context.Users.FirstOrDefault(db=>db.UserId == userId);
-            if (user != null)
+            var trainings = _context.Trainings.Include(db=>db.Exercises).Where(db=>db.UserId == userId).ToList();
+            if (trainings != null)
             {
-                var trainings = user.Trainings;
                 return Ok(trainings);
             }
             return NotFound("User with this id does not exist");
@@ -80,13 +78,12 @@ public class TrainingController : Controller
     {
         try
         {
-            var user = _context.Users.FirstOrDefault(db => db.UserId == userId);
-            if (user != null)
+            var training = _context.Trainings.Include(db => db.Exercises).FirstOrDefault(db => db.UserId == userId && db.TrainingId == trainingId);
+            if (training != null)
             {
-                var training = user.Trainings.Where(o=>o.TrainingId == trainingId);
                 return Ok(training);
             }
-            return NotFound("User with this id does not exist");
+            return NotFound($"Training with this user id : {userId} and training id: {trainingId} does not exist");
         }
         catch (Exception ex)
         {
