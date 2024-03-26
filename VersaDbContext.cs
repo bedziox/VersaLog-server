@@ -16,9 +16,10 @@ public class VersaDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Training>()
-            .HasOne<User>()
-            .WithMany(t => t.Trainings)
-            .HasForeignKey(x => x.TrainingId);
+            .HasOne(training => training.User)
+            .WithMany(user => user.Trainings)
+            .HasForeignKey(training => training.UserId)
+            .IsRequired();
         modelBuilder.Entity<Exercise>()
             .HasMany<Training>()
             .WithMany(t => t.Exercises);

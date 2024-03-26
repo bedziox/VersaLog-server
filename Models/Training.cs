@@ -13,4 +13,5 @@ public class Training()
     public List<Exercise> Exercises { get; set; } = new();
     public List<string> Results { get; set; } = new();
     public virtual User User { get; set; }
+    public int UserId { get; set; }
 }

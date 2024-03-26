@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
 using VersaLog_server.Models;
 
@@ -141,6 +142,7 @@ public class TrainingController : Controller
             if (user != null)
             {
                 training.User = user;
+                training.UserId = request.UserId;
             }
             _context.Trainings.Add(training);
             await _context.SaveChangesAsync();
@@ -158,7 +160,7 @@ public class TrainingController : Controller
          try
          {
              var training = await _context.Trainings
-                 .Include(t => t.Exercises) // Eager loading for exercises (optional)
+                 .Include(t => t.Exercises)
                  .FirstOrDefaultAsync(t => t.TrainingId == id);
              if (training == null)
              {
