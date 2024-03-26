@@ -104,7 +104,7 @@ public class TrainingController : Controller
             {
                 _context.Trainings.Remove(training);
                 await _context.SaveChangesAsync();
-                return (Ok($"Exercise with id:{trainingId} removed"));
+                return (Ok($"Training with id:{trainingId} removed"));
             }
             return NotFound($"Training with id: {trainingId} not found");
         }
@@ -118,11 +118,16 @@ public class TrainingController : Controller
     {
         try
         {
+            var user = await _context.Users.FirstOrDefaultAsync(db => db.UserId == request.UserId);
+            if (user == null)
+                return NotFound($"User with id: {request.UserId} not found");
             var training = new Training
             {
                 DateAssigned = request.DateAssigned,
                 Status = request.Status,
                 Results = request.Results.ToList(),
+                User = user,
+                UserId = request.UserId
             };
             var existingExercises = new List<Exercise>();
             foreach (var item in request.Exercises)
@@ -138,12 +143,6 @@ public class TrainingController : Controller
                 }
             }
             training.Exercises = existingExercises;
-            var user = await _context.Users.FirstOrDefaultAsync(db => db.UserId == request.UserId);
-            if (user != null)
-            {
-                training.User = user;
-                training.UserId = request.UserId;
-            }
             _context.Trainings.Add(training);
             await _context.SaveChangesAsync();
             return Ok(training);

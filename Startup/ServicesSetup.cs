@@ -11,7 +11,8 @@ public static class ServicesSetup
     {
         services.AddEndpointsApiExplorer();
         services.AddControllers().AddJsonOptions(options =>
-            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter())).AddJsonOptions(x =>
+            x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
         services.AddDbContext<VersaDbContext>(options =>
             options.UseNpgsql(connection));
