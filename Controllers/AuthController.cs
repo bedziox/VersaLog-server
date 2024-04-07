@@ -71,7 +71,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("valid")]
-    public ActionResult<string> ValidateToken(string? token)
+    public ActionResult<User> ValidateToken(string? token, int userId)
     {
         string? jwt;
         if (token == null)
@@ -80,7 +80,11 @@ public class AuthController : ControllerBase
         {
             JwtSecurityToken newToken = new JwtSecurityToken(token);
             if (newToken.ValidTo > DateTime.UtcNow)
-                return Ok(token);
+            {
+                var user = _context.Users.FirstOrDefault(db => db.UserId == userId);
+                return Ok(user);
+            }
+                
             return Unauthorized("Token not valid");
         }
         catch (Exception ex)
