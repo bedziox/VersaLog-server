@@ -12,6 +12,7 @@ public class VersaDbContext : DbContext
     
     public VersaDbContext(DbContextOptions<VersaDbContext> options) : base(options)
     {
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
     }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

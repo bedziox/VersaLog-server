@@ -120,19 +120,20 @@ public class TrainingController : Controller
                 return NotFound($"User with id: {request.UserId} not found");
             var training = new Training
             {
-                DateAssigned = request.DateAssigned,
+                DateAssigned = request.DateAssigned.ToUniversalTime(),
                 Status = request.Status,
-                Results = request.Results.ToList(),
                 User = user,
                 UserId = request.UserId
             };
             var existingExercises = new List<Exercise>();
+            var results = new List<string>();
             foreach (var item in request.Exercises)
             {
                 var exercise = await _context.Exercises.FirstOrDefaultAsync(db => db.ExerciseId == item.ExerciseId);
                 if (exercise != null)
                 {
                     existingExercises.Add(exercise);
+                    results.Add("TBA");
                 }
                 else
                 {
@@ -140,6 +141,7 @@ public class TrainingController : Controller
                 }
             }
             training.Exercises = existingExercises;
+            training.Results = results;
             _context.Trainings.Add(training);
             await _context.SaveChangesAsync();
             return Ok(training);
@@ -162,8 +164,8 @@ public class TrainingController : Controller
              {
                  return NotFound("Training not found");
              }
-             
-             training.DateAssigned = trainingDto.DateAssigned;
+
+             training.DateAssigned = trainingDto.DateAssigned.ToUniversalTime();
              training.Status = trainingDto.Status;
              training.Results = trainingDto.Results.ToList();
         

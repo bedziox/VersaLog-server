@@ -7,6 +7,7 @@ using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using VersaLog_server.Models;
 
 namespace VersaLog_server.Controllers;
@@ -60,6 +61,8 @@ public class ExerciseController : Controller
     [HttpPost]
     public async Task<ActionResult<Exercise>> AddExercise(Exercise request)
     {
+        if (request.Name.IsNullOrEmpty() || request.Description.IsNullOrEmpty() || request.Type.Equals(null))
+            return BadRequest("All data must be filled");
         if (_context.Exercises.Any(db => db.Name == request.Name))
             return BadRequest("Exercise already exists");
         try
@@ -83,6 +86,8 @@ public class ExerciseController : Controller
     [HttpPut]
     public async Task<ActionResult> EditExercise(Exercise request)
     {
+        if (request.Name.IsNullOrEmpty() || request.Description.IsNullOrEmpty() || request.Type.Equals(null))
+            return BadRequest("All data must be filled");
         var exercise = _context.Exercises.FirstOrDefault(o => o.ExerciseId == request.ExerciseId);
         try
         {
