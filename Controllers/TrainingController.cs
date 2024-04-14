@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VersaLog_server.Models;
+using VersaLog_server.Utils;
 
 namespace VersaLog_server.Controllers;
 
@@ -125,6 +126,95 @@ public class TrainingController : Controller
                 .Where(tr => tr.DateAssigned >= dateStart && tr.DateAssigned <= dateEnd)
                 .Include(db => db.ExerciseResults)
                 .ThenInclude(er => er.Exercise)
+                .ToList();
+            if (trainings != null)
+            {
+                var trainingDtos = trainings.Select(training => new TrainingDto
+                {
+                    TrainingId = training.TrainingId,
+                    DateAssigned = training.DateAssigned,
+                    Status = training.Status,
+                    ExerciseResults = training.ExerciseResults.Select(er => new ExerciseResultDto
+                    {
+                        ExerciseResultId = er.ExerciseResultId,
+                        Exercise = er.Exercise,
+                        Result = er.Result,
+                        Sets = er.Sets,
+                        Reps = er.Reps
+                    }).ToList(),
+                    Note = training.Note,
+                    UserId = training.UserId
+                }).ToList();
+                return Ok(trainingDtos);
+            }
+            return NotFound("User with this id does not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest("Error occurred during sending Trainings");
+        }
+    }
+    [HttpGet]
+    [Route("user/type")]
+    public ActionResult<List<TrainingDto>> GetAllByUserAndType(int userId, ExerciseType type)
+    {
+        try
+        {
+            var trainings = _context.Trainings
+                .Where(db => db.UserId == userId)
+                .Include(db => db.ExerciseResults)
+                .ThenInclude(er => er.Exercise)
+                .ToList();
+            
+            trainings = trainings
+                .Where(training => training.ExerciseResults.Any(er => er.Exercise.Type == type))
+                .ToList();
+            if (trainings != null)
+            {
+                var trainingDtos = trainings.Select(training => new TrainingDto
+                {
+                    TrainingId = training.TrainingId,
+                    DateAssigned = training.DateAssigned,
+                    Status = training.Status,
+                    ExerciseResults = training.ExerciseResults.Select(er => new ExerciseResultDto
+                    {
+                        ExerciseResultId = er.ExerciseResultId,
+                        Exercise = er.Exercise,
+                        Result = er.Result,
+                        Sets = er.Sets,
+                        Reps = er.Reps
+                    }).ToList(),
+                    Note = training.Note,
+                    UserId = training.UserId
+                }).ToList();
+                return Ok(trainingDtos);
+            }
+            return NotFound("User with this id does not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest("Error occurred during sending Trainings");
+        }
+    }
+    
+    [HttpGet]
+    [Route("user/type/date")]
+    public ActionResult<List<TrainingDto>> GetAllByUserTypeAndDate(int userId, ExerciseType type, DateTime? dateStart, DateTime? dateEnd)
+    {
+        try
+        {
+            dateStart ??= DateTime.UtcNow.Date;
+            dateEnd ??= DateTime.UtcNow.Date.AddDays(1).AddTicks(-1);
+            
+            var trainings = _context.Trainings
+                .Where(db => db.UserId == userId)
+                .Where(tr => tr.DateAssigned >= dateStart && tr.DateAssigned <= dateEnd)
+                .Include(db => db.ExerciseResults)
+                .ThenInclude(er => er.Exercise)
+                .ToList();
+            
+            trainings = trainings
+                .Where(training => training.ExerciseResults.Any(er => er.Exercise.Type == type))
                 .ToList();
             if (trainings != null)
             {
