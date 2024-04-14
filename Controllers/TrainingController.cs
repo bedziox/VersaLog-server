@@ -25,7 +25,9 @@ public class TrainingController : Controller
     {
         try
         {
-            return await _context.Trainings.Include(db => db.Exercises).ToListAsync();
+            return await _context.Trainings.Include(db=> db.ExerciseResults)
+                .ThenInclude(er => er.Exercise)
+                .ToListAsync();
         }
         catch (Exception ex)
         {
@@ -35,15 +37,33 @@ public class TrainingController : Controller
 
     [HttpGet]
     [Route("id")]
-    public ActionResult<Training?> GetById(int id)
+    public ActionResult<TrainingDto> GetById(int id)
     {
 
         try
         {
-            var training = _context.Trainings.Include(db => db.Exercises).FirstOrDefault(o => o.TrainingId == id);
+            var training = _context.Trainings.
+                Include(db => db.ExerciseResults)
+                .ThenInclude(er => er.Exercise)
+                .FirstOrDefault(o => o.TrainingId == id);
             if (training != null)
             {
-                return Ok(training);
+                var trainingDto = new TrainingDto
+                {
+                    TrainingId = training.TrainingId,
+                    DateAssigned = training.DateAssigned,
+                    Note = training.Note,
+                    ExerciseResults = training.ExerciseResults.Select(er => new ExerciseResultDto
+                    {
+                        ExerciseResultId = er.ExerciseResultId,
+                        Exercise = er.Exercise,
+                        Result = er.Result,
+                        Sets = er.Sets,
+                        Reps = er.Reps
+                    }).ToList(),
+                    Status = training.Status
+                };
+                return Ok(trainingDto);
             }
 
             return NotFound("Training with this ID does not exist");
@@ -56,14 +76,34 @@ public class TrainingController : Controller
 
     [HttpGet]
     [Route("user")]
-    public ActionResult<List<Training>> GetAllByUser(int userId)
+    public ActionResult<List<TrainingDto>> GetAllByUser(int userId)
     {
         try
         {
-            var trainings = _context.Trainings.Include(db=>db.Exercises).Where(db=>db.UserId == userId).ToList();
+            var trainings = _context.Trainings
+                .Where(db => db.UserId == userId)
+                .Include(db => db.ExerciseResults)
+                .ThenInclude(er => er.Exercise)
+                .ToList();
             if (trainings != null)
             {
-                return Ok(trainings);
+                var trainingDtos = trainings.Select(training => new TrainingDto
+                {
+                    TrainingId = training.TrainingId,
+                    DateAssigned = training.DateAssigned,
+                    Status = training.Status,
+                    ExerciseResults = training.ExerciseResults.Select(er => new ExerciseResultDto
+                    {
+                        ExerciseResultId = er.ExerciseResultId,
+                        Exercise = er.Exercise,
+                        Result = er.Result,
+                        Sets = er.Sets,
+                        Reps = er.Reps
+                    }).ToList(),
+                    Note = training.Note,
+                    UserId = training.UserId
+                }).ToList();
+                return Ok(trainingDtos);
             }
             return NotFound("User with this id does not exist");
         }
@@ -73,12 +113,56 @@ public class TrainingController : Controller
         }
     }
     [HttpGet]
-    [Route("user/id")]
-    public ActionResult<Training> GetByUserAndId(int userId, int trainingId)
+    [Route("user/date")]
+    public ActionResult<List<TrainingDto>> GetAllByUserAndDatePeriod(int userId, DateTime dateStart, DateTime dateEnd)
     {
         try
         {
-            var training = _context.Trainings.Include(db => db.Exercises).FirstOrDefault(db => db.UserId == userId && db.TrainingId == trainingId);
+            var trainings = _context.Trainings
+                .Where(db => db.UserId == userId)
+                .Where(tr => tr.DateAssigned >= dateStart.ToUniversalTime())
+                .Where(tr => tr.DateAssigned <= dateEnd.ToUniversalTime())
+                .Include(db => db.ExerciseResults)
+                .ThenInclude(er => er.Exercise)
+                .ToList();
+            if (trainings != null)
+            {
+                var trainingDtos = trainings.Select(training => new TrainingDto
+                {
+                    TrainingId = training.TrainingId,
+                    DateAssigned = training.DateAssigned,
+                    Status = training.Status,
+                    ExerciseResults = training.ExerciseResults.Select(er => new ExerciseResultDto
+                    {
+                        ExerciseResultId = er.ExerciseResultId,
+                        Exercise = er.Exercise,
+                        Result = er.Result,
+                        Sets = er.Sets,
+                        Reps = er.Reps
+                    }).ToList(),
+                    Note = training.Note,
+                    UserId = training.UserId
+                }).ToList();
+                return Ok(trainingDtos);
+            }
+            return NotFound("User with this id does not exist");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest("Error occurred during sending Trainings");
+        }
+    }
+    
+    [HttpGet]
+    [Route("user/id")]
+    public ActionResult<TrainingDto> GetByUserAndId(int userId, int trainingId)
+    {
+        try
+        {
+            var training = _context.Trainings
+                .Include(db => db.ExerciseResults)
+                .ThenInclude(er => er.Exercise)
+                .FirstOrDefault(db => db.UserId == userId && db.TrainingId == trainingId);
             if (training != null)
             {
                 return Ok(training);
@@ -123,25 +207,33 @@ public class TrainingController : Controller
                 DateAssigned = request.DateAssigned.ToUniversalTime(),
                 Status = request.Status,
                 User = user,
-                UserId = request.UserId
+                UserId = request.UserId,
+                Note = "TBA"
             };
-            var existingExercises = new List<Exercise>();
-            var results = new List<string>();
-            foreach (var item in request.Exercises)
+            var existingExercises = new List<ExerciseResult>();
+            foreach (var item in request.ExerciseResults)
             {
-                var exercise = await _context.Exercises.FirstOrDefaultAsync(db => db.ExerciseId == item.ExerciseId);
+                var exercise = await _context.Exercises.FirstOrDefaultAsync(db => db.ExerciseId == item.Exercise.ExerciseId);
                 if (exercise != null)
                 {
-                    existingExercises.Add(exercise);
-                    results.Add("TBA");
+                    var newExeResult = new ExerciseResult
+                    {
+                        Training = training,
+                        TrainingId = training.TrainingId,
+                        Exercise = exercise,
+                        Result = "TBA",
+                        Reps = item.Reps,
+                        Sets = item.Sets
+                    };
+                    _context.ExerciseResults.Add(newExeResult);
+                    existingExercises.Add(newExeResult);
                 }
                 else
                 {
-                    return NotFound($"Exercise with id: {item.ExerciseId} not found");
+                    return NotFound($"Exercise with id: {item.Exercise.ExerciseId} not found");
                 }
             }
-            training.Exercises = existingExercises;
-            training.Results = results;
+            training.ExerciseResults = existingExercises;
             _context.Trainings.Add(training);
             await _context.SaveChangesAsync();
             return Ok(training);
@@ -158,17 +250,54 @@ public class TrainingController : Controller
          try
          {
              var training = await _context.Trainings
-                 .Include(t => t.Exercises)
+                 .Include(t => t.ExerciseResults)
+                 .ThenInclude(er => er.Exercise)
                  .FirstOrDefaultAsync(t => t.TrainingId == id);
              if (training == null)
              {
                  return NotFound("Training not found");
              }
-
+             
              training.DateAssigned = trainingDto.DateAssigned.ToUniversalTime();
              training.Status = trainingDto.Status;
-             training.Results = trainingDto.Results.ToList();
-        
+             training.Note = trainingDto.Note;
+             
+             var exerciseResultIdsInRequest = trainingDto.ExerciseResults.Select(erDto => erDto.ExerciseResultId);
+             var exerciseResultsToRemove = training.ExerciseResults.Where(er => !exerciseResultIdsInRequest.Contains(er.ExerciseResultId)).ToList();
+             foreach (var erToRemove in exerciseResultsToRemove)
+             {
+                 _context.ExerciseResults.Remove(erToRemove);
+             }
+
+             foreach (var erDto in trainingDto.ExerciseResults)
+             {
+                 var existingExerciseResult = training.ExerciseResults.FirstOrDefault(er => er.ExerciseResultId == erDto.ExerciseResultId);
+                 if (existingExerciseResult != null)
+                 {
+                     existingExerciseResult.Result = erDto.Result;
+                     existingExerciseResult.Sets = erDto.Sets;
+                     existingExerciseResult.Reps = erDto.Reps;
+                 }
+                 else
+                 {
+                     var exercise = await _context.Exercises.FindAsync(erDto.Exercise.ExerciseId);
+                     if (exercise == null)
+                     {
+                         return NotFound($"Exercise with ID {erDto.Exercise.ExerciseId} not found");
+                     }
+
+                     var newExerciseResult = new ExerciseResult
+                     {
+                         Exercise = exercise,
+                         Result = erDto.Result,
+                         Sets = erDto.Sets,
+                         Reps = erDto.Reps
+                     };
+                     
+                     training.ExerciseResults.Add(newExerciseResult);
+                 }
+             }
+             
              _context.Trainings.Update(training);
              await _context.SaveChangesAsync();
         
