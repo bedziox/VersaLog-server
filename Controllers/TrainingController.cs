@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.JavaScript;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -65,7 +66,6 @@ public class TrainingController : Controller
                 };
                 return Ok(trainingDto);
             }
-
             return NotFound("Training with this ID does not exist");
         }
         catch (Exception ex)
@@ -114,14 +114,15 @@ public class TrainingController : Controller
     }
     [HttpGet]
     [Route("user/date")]
-    public ActionResult<List<TrainingDto>> GetAllByUserAndDatePeriod(int userId, DateTime dateStart, DateTime dateEnd)
+    public ActionResult<List<TrainingDto>> GetAllByUserAndDatePeriod(int userId, DateTime? dateStart, DateTime? dateEnd)
     {
         try
         {
+            dateStart ??= DateTime.UtcNow.Date;
+            dateEnd ??= DateTime.UtcNow.Date.AddDays(1).AddTicks(-1);
             var trainings = _context.Trainings
                 .Where(db => db.UserId == userId)
-                .Where(tr => tr.DateAssigned >= dateStart.ToUniversalTime())
-                .Where(tr => tr.DateAssigned <= dateEnd.ToUniversalTime())
+                .Where(tr => tr.DateAssigned >= dateStart && tr.DateAssigned <= dateEnd)
                 .Include(db => db.ExerciseResults)
                 .ThenInclude(er => er.Exercise)
                 .ToList();
