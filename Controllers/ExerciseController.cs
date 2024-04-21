@@ -38,7 +38,7 @@ public class ExerciseController : Controller
 
     [HttpGet]
     [Route("id")]
-    public ActionResult<Exercise?> GetById(int id)
+    public ActionResult<Exercise> GetById(int id)
     {
 
         try

@@ -18,7 +18,7 @@ public class UserController : Controller
     }
 
     [HttpGet]
-    public async Task<ActionResult<User>> GetAll()
+    public async Task<ActionResult<List<User>>> GetAll()
     {
         try
         {
