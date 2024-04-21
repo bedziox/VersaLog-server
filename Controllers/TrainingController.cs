@@ -214,7 +214,7 @@ public class TrainingController : Controller
                 .ToList();
             
             trainings = trainings
-                .Where(training => training.ExerciseResults.Any(er => er.Exercise.Type == type))
+                .Where(training => training.ExerciseResults.Exists(er => er.Exercise.Type == type))
                 .ToList();
             if (trainings != null)
             {

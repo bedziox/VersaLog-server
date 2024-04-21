@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
+using VersaLog_server.Utils;
 
 namespace VersaLog_server.Models;
 
@@ -16,6 +17,7 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public List<Training> Trainings { get; set; } = new();
+    public Role Role { get; set; } = Role.User;
 }
 
 public class UserBuilder
@@ -31,7 +33,8 @@ public class UserBuilder
             Username = request.Username,
             FirstName = request.FirstName,
             LastName = request.LastName,
-            Email = request.Email
+            Email = request.Email,
+            Role = Role.User
         };
         return user;
     }
