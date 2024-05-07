@@ -77,7 +77,7 @@ public class TrainingController : Controller
 
     [HttpGet]
     [Route("user")]
-    public ActionResult<List<TrainingDto>> GetAllByUser(int userId)
+    public ActionResult<List<TrainingDto>> GetByUser(int userId)
     {
         try
         {
@@ -116,12 +116,12 @@ public class TrainingController : Controller
     
     [HttpGet]
     [Route("user/type/date")]
-    public ActionResult<List<TrainingDto>> GetAllByUserTypeAndDate(int userId, ExerciseType type, DateTime? dateStart, DateTime? dateEnd)
+    public ActionResult<List<TrainingDto>> GetByUserTypeAndDate(int userId, ExerciseType type, DateTime? dateStart, DateTime? dateEnd)
     {
         try
         {
             dateStart ??= DateTime.UtcNow.Date;
-            dateEnd ??= DateTime.UtcNow.Date.AddDays(1).AddTicks(-1);
+            dateEnd ??= DateTime.UtcNow.Date.AddDays(1);
             
             var trainings = _context.Trainings
                 .Where(db => db.UserId == userId)
@@ -132,7 +132,7 @@ public class TrainingController : Controller
             
             trainings = trainings
                 .Where(training => training.ExerciseResults.Exists(er => er.Exercise.Type == type))
-                .ToList();
+                 .ToList();
             if (trainings != null)
             {
                 var trainingDtos = trainings.Select(training => new TrainingDto
@@ -162,20 +162,37 @@ public class TrainingController : Controller
     }
     
     [HttpGet]
-    [Route("user/id")]
-    public ActionResult<TrainingDto> GetByUserAndId(int userId, int trainingId)
+    [Route("user/status")]
+    public ActionResult<List<TrainingDto>> GetByUserAndStatus(int userId, Status status)
     {
         try
         {
-            var training = _context.Trainings
+            var trainings = _context.Trainings
+                .Where(db => db.UserId == userId  && db.Status == status)
                 .Include(db => db.ExerciseResults)
                 .ThenInclude(er => er.Exercise)
-                .FirstOrDefault(db => db.UserId == userId && db.TrainingId == trainingId);
-            if (training != null)
+                .ToList();
+            if (trainings != null)
             {
-                return Ok(training);
+                var trainingDtos = trainings.Select(training => new TrainingDto
+                {
+                    TrainingId = training.TrainingId,
+                    DateAssigned = training.DateAssigned,
+                    Status = training.Status,
+                    ExerciseResults = training.ExerciseResults.Select(er => new ExerciseResultDto
+                    {
+                        ExerciseResultId = er.ExerciseResultId,
+                        Exercise = er.Exercise,
+                        Result = er.Result,
+                        Sets = er.Sets,
+                        Reps = er.Reps
+                    }).ToList(),
+                    Note = training.Note,
+                    UserId = training.UserId
+                }).ToList();
+                return Ok(trainingDtos);
             }
-            return NotFound($"Training with this user id : {userId} and training id: {trainingId} does not exist");
+            return NotFound($"Training with this user id : {userId} and status : {status} does not exist");
         }
         catch (Exception ex)
         {
@@ -212,7 +229,7 @@ public class TrainingController : Controller
                 return NotFound($"User with id: {request.UserId} not found");
             var training = new Training
             {
-                DateAssigned = request.DateAssigned.ToUniversalTime(),
+                DateAssigned = request.DateAssigned,
                 Status = request.Status,
                 User = user,
                 UserId = request.UserId,
@@ -266,7 +283,7 @@ public class TrainingController : Controller
                  return NotFound("Training not found");
              }
              
-             training.DateAssigned = trainingDto.DateAssigned.ToUniversalTime();
+             training.DateAssigned = trainingDto.DateAssigned;
              training.Status = trainingDto.Status;
              training.Note = trainingDto.Note;
              
