@@ -10,7 +10,7 @@ builder.Services.RegisterServices(builder.Configuration.GetConnectionString("AWS
 
 builder.Services.AddCors(o => o.AddPolicy("MyPolicy", builder2 =>
 {
-    builder2.WithOrigins("*")
+    builder2.WithOrigins("http://localhost:5173")
         .AllowAnyMethod()
         .AllowAnyHeader();
 }));
