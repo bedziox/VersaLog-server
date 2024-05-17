@@ -24,11 +24,11 @@ public class ExerciseController : Controller
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<Exercise>>> GetAll()
+    public ActionResult<List<Exercise>> GetAll()
     {
         try
         {
-            return await _context.Exercises.ToListAsync();
+            return _context.Exercises.ToList();
         }
         catch (Exception ex)
         {

@@ -46,11 +46,11 @@ public class AuthController : ControllerBase
         }
     }
     [HttpPost("login")]
-    public async Task<ActionResult<User>> Login(UserDto request)
+    public ActionResult<UserDto> Login(UserDto request)
     {
         try
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Username || u.Email == request.Email);
+            var user = _context.Users.FirstOrDefault(u => u.Username == request.Username || u.Email == request.Email);
             if(!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
                 throw new Exception();

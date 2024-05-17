@@ -23,13 +23,13 @@ public class TrainingController : Controller
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<Training>>> GetAll()
+    public ActionResult<List<Training>> GetAll()
     {
         try
         {
-            return await _context.Trainings.Include(db=> db.ExerciseResults)
+            return _context.Trainings.Include(db=> db.ExerciseResults)
                 .ThenInclude(er => er.Exercise)
-                .ToListAsync();
+                .ToList();
         }
         catch (Exception ex)
         {

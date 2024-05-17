@@ -18,11 +18,11 @@ public class UserController : Controller
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<User>>> GetAll()
+    public <ActionResult<List<User>> GetAll()
     {
         try
         {
-            var users = await _context.Users.ToListAsync();
+            var users =  _context.Users.ToList();
             return Ok(users);
         }   
         catch (Exception ex)
@@ -33,11 +33,11 @@ public class UserController : Controller
     
     [HttpGet]
     [Route("id")]
-    public async Task<ActionResult<User>> GetById(int id)
+    public  ActionResult<User> GetById(int id)
     {
         try
         {
-            var user = await _context.Users.FirstOrDefaultAsync(us => us.UserId == id);
+            var user = _context.Users.FirstOrDefault(us => us.UserId == id);
             if (user != null)
             {
                 return Ok(user);
