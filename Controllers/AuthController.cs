@@ -50,11 +50,12 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var user = _context.Users.FirstOrDefault(u => u.Username == request.Username || u.Email == request.Email);
-            if(!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            var user = _context.Users.FirstOrDefault(u => u.Username == request.Username);
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
                 throw new Exception();
             }
+
             string token = CreateToken(user);
             UserDto response = new UserDto
             {

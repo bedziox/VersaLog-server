@@ -236,33 +236,41 @@ public class TrainingController : Controller
                 Note = "TBA"
             };
             var existingExercises = new List<ExerciseResult>();
-            foreach (var item in request.ExerciseResults)
+            if (request.ExerciseResults.Count != 0)
             {
-                var exercise = await _context.Exercises.FirstOrDefaultAsync(db => db.ExerciseId == item.Exercise.ExerciseId);
-                if (exercise != null)
+                foreach (var item in request.ExerciseResults)
                 {
-                    var newExeResult = new ExerciseResult
+                    var exercise = await _context.Exercises.FirstOrDefaultAsync(db => db.ExerciseId == item.Exercise.ExerciseId);
+                    if (exercise != null)
                     {
-                        Training = training,
-                        TrainingId = training.TrainingId,
-                        Exercise = exercise,
-                        Result = "TBA",
-                        Reps = item.Reps,
-                        Sets = item.Sets
-                    };
-                    _context.ExerciseResults.Add(newExeResult);
-                    existingExercises.Add(newExeResult);
+                        var newExeResult = new ExerciseResult
+                        {
+                            Training = training,
+                            TrainingId = training.TrainingId,
+                            Exercise = exercise,
+                            Result = "TBA",
+                            Reps = item.Reps,
+                            Sets = item.Sets
+                        };
+                        _context.ExerciseResults.Add(newExeResult);
+                        existingExercises.Add(newExeResult);
+                    }
+                    else
+                    {
+                        return NotFound($"Exercise with id: {item.Exercise.ExerciseId} not found");
+                    }
                 }
-                else
-                {
-                    return NotFound($"Exercise with id: {item.Exercise.ExerciseId} not found");
-                }
+                training.ExerciseResults = existingExercises;
+                _context.Trainings.Add(training);
+                await _context.SaveChangesAsync();
+                return Ok(training);
             }
-            training.ExerciseResults = existingExercises;
-            _context.Trainings.Add(training);
-            await _context.SaveChangesAsync();
-            return Ok(training);
+            else
+            {
+                return BadRequest("Training cannot have no exercises");
+            }
         }
+
         catch (Exception ex)
         {
             return BadRequest(ex.Message);

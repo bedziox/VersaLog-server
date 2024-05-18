@@ -18,7 +18,7 @@ public class UserController : Controller
     }
 
     [HttpGet]
-    public <ActionResult<List<User>> GetAll()
+    public ActionResult<List<User>> GetAll()
     {
         try
         {
