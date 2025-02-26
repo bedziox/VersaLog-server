@@ -9,6 +9,7 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src  
 COPY ["Directory.Packages.props", "."]  
 COPY ["VersaLog.Server/VersaLog.Server.csproj", "VersaLog.Server/"]  
+COPY ["VersaLog.Tests/VersaLog.Tests.csproj", "VersaLog.Tests/"]
 RUN dotnet restore "./VersaLog.Server/VersaLog.Server.csproj"  
 COPY . .  
 WORKDIR "/src/VersaLog.Server"  
@@ -19,6 +20,10 @@ RUN dotnet ef migrations add InitialMigration
 RUN dotnet ef database update  
   
 RUN dotnet build "./VersaLog.Server.csproj" -c $BUILD_CONFIGURATION -o /app/build  
+
+# Run tests
+WORKDIR "/src/VersaLog.Tests"
+RUN dotnet test --no-restore --verbosity normal
   
 FROM build AS publish  
 ARG BUILD_CONFIGURATION=Release  

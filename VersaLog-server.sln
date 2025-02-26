@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VersaLog.Server", "VersaLog
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{22378A4A-83D2-4F60-8BF2-A270DAB41816}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VersaLog.Tests", "VersaLog.Tests\VersaLog.Tests.csproj", "{F542B6B7-24C1-460F-A85C-963BF859684E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,8 +28,15 @@ Global
 		{22378A4A-83D2-4F60-8BF2-A270DAB41816}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{22378A4A-83D2-4F60-8BF2-A270DAB41816}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{22378A4A-83D2-4F60-8BF2-A270DAB41816}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F542B6B7-24C1-460F-A85C-963BF859684E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F542B6B7-24C1-460F-A85C-963BF859684E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F542B6B7-24C1-460F-A85C-963BF859684E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F542B6B7-24C1-460F-A85C-963BF859684E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E4E919C6-249E-490A-8306-41D413FD3558}
 	EndGlobalSection
 EndGlobal
